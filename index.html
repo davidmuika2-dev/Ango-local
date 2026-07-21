@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-AO">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AngoLocal - Huambo</title>
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilo -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --primaria: #d32f2f; --secundaria: #ff6f00; --escuro: #1a1a1a; --claro: #f8f9fa; }
+        body { background: #f5f5f5; min-height: 100vh; padding-bottom: 70px; }
+
+        /* Telas */
+        .tela { display: none; padding: 15px; }
+        .tela.ativa { display: block; animation: aparecer 0.3s ease; }
+        @keyframes aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cabeçalho */
+        header { background: linear-gradient(135deg, var(--primaria), #b71c1c); color: white; padding: 20px 15px; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        header h1 { font-size: 22px; margin-bottom: 5px; }
+        header p { opacity: 0.9; font-size: 14px; }
+
+        /* Barra de Navegação Inferior */
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -3px 15px rgba(0,0,0,0.1); z-index: 100; }
+        .nav-item { text-align: center; color: #777; font-size: 12px; cursor: pointer; transition: 0.3s; }
+        .nav-item.ativo { color: var(--primaria); }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 3px; }
+
+        /* Busca */
+        .busca { width: 100%; padding: 14px 20px; border: none; border-radius: 50px; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.08); font-size: 16px; margin: 15px 0; }
+        .busca:focus { outline: 2px solid var(--primaria); }
+
+        /* Categorias */
+        .categorias { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+        .categoria { background: white; padding: 12px 20px; border-radius: 50px; white-space: nowrap; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: pointer; transition: 0.3s; }
+        .categoria.ativa { background: var(--primaria); color: white; }
+
+        /* Cartões de Loja */
+        .grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
+        .cartao { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; }
+        .cartao:hover { transform: translateY(-5px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+        .cartao-img { height: 120px; background: linear-gradient(135deg, var(--primaria), var(--secundaria)); display: flex; align-items: center; justify-content: center; font-size: 40px; color: white; }
+        .cartao-corpo { padding: 12px; }
+        .cartao-corpo h3 { font-size: 15px; margin-bottom: 5px; color: var(--escuro); }
+        .cartao-corpo p { font-size: 12px; color: #777; margin-bottom: 8px; }
+        .etiqueta { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 3px 10px; border-radius: 50px; font-size: 11px; font-weight: bold; }
+
+        /* Botões */
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-principal { background: linear-gradient(135deg, var(--primaria), #b71c1c); color: white; }
+        .btn-principal:hover { transform: scale(1.02); }
+        .btn-secundario { background: white; color: var(--primaria); border: 2px solid var(--primaria); }
+
+        /* Formulários */
+        .caixa { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 3px 15px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        .campo { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; margin-bottom: 12px; }
+        .campo:focus { outline: none; border-color: var(--primaria); }
+        label { font-weight: 600; font-size: 14px; margin-bottom: 5px; display: block; color: #444; }
+
+        /* Detalhes da Loja */
+        .capa { height: 180px; background: linear-gradient(135deg, var(--primaria), var(--secundaria)); border-radius: 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 60px; color: white; }
+        .info h2 { font-size: 24px; margin-bottom: 8px; }
+        .info p { color: #666; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .acoes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .acao { padding: 15px; text-align: center; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        .acao.whatsapp { background: #25d366; color: white; }
+        .acao.ligar { background: var(--primaria); color: white; }
+
+        /* Favoritos */
+        .vazio { text-align: center; padding: 60px 20px; color: #999; }
+        .vazio i { font-size: 60px; margin-bottom: 15px; color: #ddd; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+        .modal.ativo { display: flex; }
+        .modal-conteudo { background: white; border-radius: 20px; padding: 25px; max-width: 400px; width: 100%; }
+        .fechar { text-align: right; font-size: 24px; cursor: pointer; color: #999; }
+
+        /* Spinner */
+        .carregando { text-align: center; padding: 40px; color: #777; }
+        .carregando i { font-size: 30px; color: var(--primaria); animation: girar 1s linear infinite; }
+        @keyframes girar { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<!-- Tela Inicial / Apresentação -->
+<div id="tela-inicio" class="tela ativa">
+    <div style="text-align: center; padding-top: 60px;">
+        <h1 style="font-size: 42px; color: var(--primaria); margin-bottom: 10px;">🏙️ AngoLocal</h1>
+        <p style="font-size: 18px; color: #666; margin-bottom: 50px;">Encontre tudo em Huambo, num só lugar</p>
+        <button class="btn btn-principal" onclick="abrirTela('tela-home')" style="max-width: 300px; margin: 0 auto 20px;">Começar a Explorar</button>
+        <button class="btn btn-secundario" onclick="abrirTela('tela-login')" style="max-width: 300px; margin: 0 auto;">Entrar / Cadastrar</button>
+    </div>
+</div>
+
+<!-- Tela Login -->
+<div id="tela-login" class="tela">
+    <header>
+        <h1>👤 Acessar Conta</h1>
+        <p>Entre ou crie sua conta</p>
+    </header>
+    <div style="margin-top: 20px;">
+        <div class="caixa">
+            <label>📧 E-mail ou Telefone</label>
+            <input type="text" class="campo" placeholder="ex: angolocal@gmail.com">
+            <label>🔒 Senha</label>
+            <input type="password" class="campo" placeholder="Sua senha">
+            <button class="btn btn-principal" onclick="abrirTela('tela-home')" style="margin-top: 10px;">Entrar</button>
+            <p style="text-align: center; margin-top: 15px; color: #666;">Não tem conta? <a href="#" onclick="abrirTela('tela-cadastro')" style="color: var(--primaria); font-weight: bold;">Cadastre-se</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Tela Cadastro -->
+<div id="tela-cadastro" class="tela">
+    <header>
+        <h1>📝 Criar Conta</h1>
+        <p>É grátis e rápido!</p>
+    </header>
+    <div style="margin-top: 20px;">
+        <div class="caixa">
+            <label>👤 Nome Completo</label>
+            <input type="text" class="campo" placeholder="Seu nome">
+            <label>📧 E-mail</label>
+            <input type="email" class="campo" placeholder="seuemail@gmail.com">
+            <label>📱 Telefone</label>
+            <input type="tel" class="campo" placeholder="+244 9XX XXX XXX">
+            <label>🔒 Senha</label>
+            <input type="password" class="campo" placeholder="Criar senha">
+            <button class="btn btn-principal" onclick="abrirTela('tela-home')" style="margin-top: 10px;">Criar Conta</button>
+        </div>
+    </div>
+</div>
+
+<!-- Tela Home -->
+<div id="tela-home" class="tela">
+    <header>
+        <h1>🏙️ AngoLocal</h1>
+        <p>Huambo, sua cidade ao alcance de um toque</p>
+    </header>
+
+    <input type="text" class="busca" placeholder="🔍 Procurar lojas, produtos, serviços..." onkeyup="filtrarLojas(this.value)">
+
+    <div class="categorias">
+        <div class="categoria ativa" onclick="selecionarCategoria(this, 'todas')">Todas</div>
+        <div class="categoria" onclick="selecionarCategoria(this, 'supermercado')">🛒 Supermercados</div>
+        <div class="categoria" onclick="selecionarCategoria(this, 'restaurante')">🍽️ Restaurantes</div>
+        <div class="categoria" onclick="selecionarCategoria(this, 'farmacia')">💊 Farmácias</div>
+        <div class="categoria" onclick="selecionarCategoria(this, 'servico')">🔧 Serviços</div>
+    </div>
+
+    <h3 style="margin: 10px 0 15px; color: #333;">🔥 Lojas em Destaque</h3>
+    <div class="grade" id="lista-lojas">
+        <!-- Lojas carregadas via JS -->
+    </div>
+</div>
+
+<!-- Tela Detalhes da Loja -->
+<div id="tela-loja" class="tela">
+    <button onclick="abrirTela('tela-home')" style="background:none; border:none; font-size:24px; cursor:pointer; color:white; position:absolute; top:15px; left:15px;">←</button>
+    <div class="capa" id="loja-capa">🛒</div>
+    <div class="info">
+        <h2 id="loja-nome">AngoMart</h2>
+        <p id="loja-categoria"><i class="fas fa-tag"></i> Supermercado</p>
+        <p id="loja-endereco"><i class="fas fa-map-marker-alt"></i> Bairro São Pedro, Huambo</p>
+        <p id="loja-horario"><i class="fas fa-clock"></i> Aberto: 08:00 - 20:00</p>
+        <p id="loja-descricao">Sua loja favorita chegando com tudo!</p>
+    </div>
+    <div class="acoes">
+        <div class="acao whatsapp" onclick="abrirWhatsApp()">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+        </div>
+        <div class="acao ligar" onclick="ligarTelefone()">
+            <i class="fas fa-phone"></i> Ligar
+        </div>
+    </div>
+    <button class="btn btn-principal" style="margin-top: 20px;" onclick="adicionarFavorito()">
+        <i class="fas fa-heart"></i> Adicionar aos Favoritos
+    </button>
+</div>
+
+<!-- Tela Favoritos -->
+<div id="tela-favoritos" class="tela">
+    <header>
+        <h1>❤️ Meus Favoritos</h1>
+        <p>Suas lojas preferidas</p>
+    </header>
+    <div id="lista-favoritos">
+        <div class="vazio">
+            <i class="fas fa-heart-broken"></i>
+            <p>Nenhum favorito ainda</p>
+            <p style="font-size: 14px;">Comece a explorar e salve suas lojas!</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tela Publicar -->
+<div id="tela-publicar" class="tela">
+    <header>
+        <h1>📢 Publicar Loja</h1>
+        <p>Divulgue seu negócio em Huambo</p>
+    </header>
+    <div style="margin-top: 20px;">
+        <div class="caixa">
+            <label>🏪 Nome da Loja</label>
+            <input type="text" class="campo" placeholder="Nome do seu negócio">
+            <label>📂 Categoria</label>
+            <select class="campo">
+                <option>Supermercado</option>
+                <option>Restaurante</option>
+                <option>Farmácia</option>
+                <option>Roupas</option>
+                <option>Serviços</option>
+                <option>Outro</option>
+            </select>
+            <label>📍 Endereço</label>
+            <input type="text" class="campo" placeholder="Bairro, Rua, Huambo">
+            <label>📱 Telefone / WhatsApp</label>
+            <input type="tel" class="campo" placeholder="+244 9XX XXX XXX">
+            <label>📝 Descrição</label>
+            <textarea class="campo" rows="3" placeholder="O que você vende ou oferece?"></textarea>
+            <button class="btn btn-principal" style="margin-top: 10px;">✅ Enviar Cadastro</button>
+        </div>
+    </div>
+</div>
+
+<!-- Tela Perfil -->
+<div id="tela-perfil" class="tela">
+    <header>
+        <h1>👤 Meu Perfil</h1>
+        <p>Gerencie sua conta</p>
+    </header>
+    <div style="margin-top: 20px;">
+        <div class="caixa" style="text-align: center;">
+            <div style="width: 80px; height: 80px; background: var(--primaria); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 35px; color: white;">👤</div>
+            <h3>Usuário AngoLocal</h3>
+            <p style="color: #777;">usuario@email.com</p>
+        </div>
+        <div class="caixa" style="cursor: pointer;" onclick="abrirTela('tela-favoritos')">
+            <p><i class="fas fa-heart" style="color: var(--primaria);"></i> Meus Favoritos</p>
+        </div>
+        <div class="caixa" style="cursor: pointer;" onclick="abrirTela('tela-publicar')">
+            <p><i class="fas fa-store" style="color: var(--primaria);"></i> Publicar minha Loja</p>
+        </div>
+        <div class="caixa" style="cursor: pointer;">
+            <p><i class="fas fa-cog" style="color: #777;"></i> Configurações</p>
+        </div>
+        <button class="btn btn-secundario" style="margin-top: 20px;" onclick="abrirTela('tela-inicio')">Sair da Conta</button>
+    </div>
+</div>
+
+<!-- Navegação Inferior -->
+<div class="nav" id="navegacao" style="display: none;">
+    <div class="nav-item ativo" onclick="abrirTela('tela-home')">
+        <i class="fas fa-home"></i> Início
+    </div>
+    <div class="nav-item" onclick="abrirTela('tela-favoritos')">
+        <i class="fas fa-heart"></i> Favoritos
+    </div>
+    <div class="nav-item" onclick="abrirTela('tela-publicar')">
+        <i class="fas fa-plus-circle"></i> Publicar
+    </div>
+    <div class="nav-item" onclick="abrirTela('tela-perfil')">
+        <i class="fas fa-user"></i> Perfil
+    </div>
+</div>
+
+<script>
+// Dados das Lojas
+const lojas = [
+    { id:1, nome:'AngoMart', categoria:'supermercado', endereco:'Bairro São Pedro, Huambo', horario:'08:00 - 20:00', telefone:'+244923123456', descricao:'Sua loja favorita chegando com tudo! Produtos variados e preços baixos.', icone:'🛒', destaque:true },
+    { id:2, nome:'Restaurante Sabor Angolano', categoria:'restaurante', endereco:'Centro de Huambo', horario:'10:00 - 22:00', telefone:'+244923987654', descricao:'Comida tradicional angolana deliciosa. Muamba, Calulu, Funge.', icone:'🍽️', destaque:true },
+    { id:3, nome:'Farmácia Saúde Total', categoria:'farmacia', endereco:'Bairro do Aeroporto', horario:'Aberto 24h', telefone:'+244923111222', descricao:'Medicamentos, atendimento rápido e entrega em domicílio.', icone:'💊', destaque:true },
+    { id:4, nome:'Mercado do Povo', categoria:'supermercado', endereco:'Mercado Central de Huambo', horario:'06:00 - 18:00', telefone:'+244923555666', descricao:'Frutas, legumes, verduras frescas direto do produtor.', icone:'🥦', destaque:false },
+    { id:5, nome:'Barbearia Estilo', categoria:'servico', endereco:'Bairro São João', horario:'08:00 - 19:00', telefone:'+244923777888', descricao:'Cortes modernos, barba e atendimento de qualidade.', icone:'💈', destaque:false },
+    { id:6, nome:'Loja de Roupas Moda Huambo', categoria:'servico', endereco:'Avenida 17 de Setembro', horario:'09:00 - 20:00', telefone:'+244923333444', descricao:'Roupas masculinas, femininas e infantis. Moda atual.', icone:'👗', destaque:true },
+];
+
+let lojaAtual = null;
+let favoritos = JSON.parse(localStorage.getItem('favoritos') || '[]');
+
+// Carregar lojas ao iniciar
+carregarLojas();
+
+function carregarLojas(filtro = 'todas', busca = '') {
+    const container = document.getElementById('lista-lojas');
+    container.innerHTML = '';
+    
+    let lista = lojas;
+    if(filtro !== 'todas') lista = lojas.filter(l => l.categoria === filtro);
+    if(busca) lista = lista.filter(l => l.nome.toLowerCase().includes(busca.toLowerCase()) || l.endereco.toLowerCase().includes(busca.toLowerCase()));
+    
+    if(lista.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#777; grid-column:1/-1; padding:40px;">Nenhuma loja encontrada 😔</p>';
+        return;
+    }
+    
+    lista.forEach(loja => {
+        const card = document.createElement('div');
+        card.className = 'cartao';
+        card.onclick = () => abrirLoja(loja);
+        card.innerHTML = `
+            <div class="cartao-img">${loja.icone}</div>
+            <div class="cartao-corpo">
+                <h3>${loja.nome}</h3>
+                <p>${loja.endereco}</p>
+                ${loja.destaque ? '<span class="etiqueta">⭐ Destaque</span>' : ''}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function abrirTela(idTela) {
+    // Esconder todas as telas
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    // Mostrar tela selecionada
+    document.getElementById(idTela).classList.add('ativa');
+    
+    // Mostrar/esconder navegação
+    const nav = document.getElementById('navegacao');
+    const telasSemNav = ['tela-inicio', 'tela-login', 'tela-cadastro'];
+    nav.style.display = telasSemNav.includes(idTela) ? 'none' : 'flex';
+    
+    // Atualizar navegação ativa
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
+    if(idTela === 'tela-home') document.querySelectorAll('.nav-item')[0].classList.add('ativo');
+    if(idTela === 'tela-favoritos') document.querySelectorAll('.nav-item')[1].classList.add('ativo');
+    if(idTela === 'tela-publicar') document.querySelectorAll('.nav-item')[2].classList.add('ativo');
+    if(idTela === 'tela-perfil') document.querySelectorAll('.nav-item')[3].classList.add('ativo');
+    
+    // Atualizar favoritos
+    if(idTela === 'tela-favoritos') carregarFavoritos();
+}
+
+function selecionarCategoria(el, cat) {
+    document.querySelectorAll('.categoria').forEach(c => c.classList.remove('ativa'));
+    el.classList.add('ativa');
+    carregarLojas(cat);
+}
+
+function filtrarLojas(texto) {
+    const cat = document.querySelector('.categoria.ativa').textContent.trim().toLowerCase();
+    const filtro = cat === 'todas' ? 'todas' : lojas.find(l => l.categoria === cat)?.categoria || 'todas';
+    carregarLojas(filtro, texto);
+}
+
+function abrirLoja(loja) {
+    lojaAtual = loja;
+    document.getElementById('loja-capa').textContent = loja.icone;
+    document.getElementById('loja-nome').textContent = loja.nome;
+    document.getElementById('loja-categoria').innerHTML = `<i class="fas fa-tag"></i> ${loja.categoria}`;
+    document.getElementById('loja-endereco').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${loja.endereco}`;
+    document.getElementById('loja-horario').innerHTML = `<i class="fas fa-clock"></i> ${loja.horario}`;
+    document.getElementById('loja-descricao').textContent = loja.descricao;
+    abrirTela('tela-loja');
+}
+
+function abrirWhatsApp() {
+    if(!lojaAtual) return;
+    const mensagem = encodeURIComponent(`Olá! Vi o ${lojaAtual.nome} no AngoLocal e tenho interesse.`);
+    window.open(`https://wa.me/${lojaAtual.telefone.replace(/\D/g,'')}?text=${mensagem}`, '_blank');
+}
+
+function ligarTelefone() {
+    if(!lojaAtual) return;
+    window.open(`tel:${lojaAtual.telefone}`, '_blank');
+}
+
+function adicionarFavorito() {
+    if(!lojaAtual) return;
+    if(!favoritos.find(f => f.id === lojaAtual.id)) {
+        favoritos.push(lojaAtual);
+        localStorage.setItem('favoritos', JSON.stringify(favoritos));
+        alert(`✅ ${lojaAtual.nome} adicionado aos favoritos!`);
+    } else {
+        alert('⚠️ Já está nos favoritos!');
+    }
+}
+
+function carregarFavoritos() {
+    const container = document.getElementById('lista-favoritos');
+    if(favoritos.length === 0) {
+        container.innerHTML = `<div class="vazio"><i class="fas fa-heart-broken"></i><p>Nenhum favorito ainda</p><p style="font-size:14px;">Comece a explorar e salve suas lojas!</p></div>`;
+        return;
+    }
+    container.innerHTML = '<div class="grade">';
+    favoritos.forEach(loja => {
+        container.innerHTML += `
+            <div class="cartao" onclick="abrirLoja(loja)">
+                <div class="cartao-img">${loja.icone}</div>
+                <div class="cartao-corpo">
+                    <h3>${loja.nome}</h3>
+                    <p>${loja.endereco}</p>
+                </div>
+            </div>
+        `;
+    });
+    container.innerHTML += '</div>';
+}
+</script>
+
+</body>
+</html>
+<script>
+// Dados das Lojas
+const lojas = [ ... ]
+// ... todo o código JavaScript ...
+</script>
+</body>
+</html>
